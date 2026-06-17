@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: stg_spend
+    description: >
+      Conformed spend grain across all ad platforms.
+      One row per campaign per day per platform.
+      Bronze views are UNION ALL'd here — this is the single source of truth for spend.
+    columns:
+      - name: campaign_id
+        tests: [not_null]
+      - name: spend_date
+        tests: [not_null]
+      - name: platform
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['meta', 'google']
+      - name: spend_usd
+        tests: [not_null]
+      - name: impressions
+        tests: [not_null]
+      - name: clicks
+        tests: [not_null]
+
+  - name: stg_customers
+    description: >
+      Deduplicated, typed customer records. Incremental on _loaded_at so that
+      re-running the same ingestion window is idempotent (unique_key merges duplicates).
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: email
+        tests: [not_null]
+      - name: plan_tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['free', 'starter', 'growth', 'enterprise']

@@ -1,0 +1,5 @@
+telemetry:
+  enabled: false
+
+# SQLite storage in $DAGSTER_HOME/storage (default when not specified)
+# For production swap this block for a Postgres storage config.

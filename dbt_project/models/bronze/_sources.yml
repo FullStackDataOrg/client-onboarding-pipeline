@@ -1,0 +1,44 @@
+version: 2
+
+sources:
+  - name: raw
+    database: warehouse
+    schema: raw
+    description: "Raw tables loaded by Dagster ingestion assets. Full-refresh idempotent loads."
+
+    tables:
+      - name: meta_ads_spend
+        description: "Raw Meta Ads daily campaign performance."
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 25, period: hour}
+          error_after: {count: 49, period: hour}
+        columns:
+          - name: campaign_id
+            tests: [not_null]
+          - name: date
+            tests: [not_null]
+          - name: spend_cents
+            tests: [not_null]
+
+      - name: google_ads_spend
+        description: "Raw Google Ads daily ad-group performance (different schema vs Meta)."
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 25, period: hour}
+          error_after: {count: 49, period: hour}
+        columns:
+          - name: ad_group_id
+            tests: [not_null]
+          - name: report_date
+            tests: [not_null]
+
+      - name: customers
+        description: "Daily full snapshot of ClientCo customer records."
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 49, period: hour}
+          error_after: {count: 73, period: hour}
+        columns:
+          - name: customer_id
+            tests: [not_null]

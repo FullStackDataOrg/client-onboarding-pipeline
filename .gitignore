@@ -1,0 +1,12 @@
+data/*.duckdb
+data/*.csv
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+dagster_home/
+dbt_project/target/
+dbt_project/dbt_packages/
+dbt_project/logs/
+client-onboarding.md
+.env

@@ -1,0 +1,18 @@
+services:
+  onboarding:
+    build: .
+    volumes:
+      - ./data:/workspace/data
+      - ./dbt_project:/workspace/dbt_project
+      - ./dagster_project:/workspace/dagster_project
+      - ./ingestion:/workspace/ingestion
+    ports:
+      - "3000:3000"
+      - "8080:8080"
+    environment:
+      DAGSTER_HOME: /workspace/dagster_home
+      DBT_PROFILES_DIR: /workspace/dbt_project
+      DUCKDB_PATH: /workspace/data/warehouse.duckdb
+      PYTHONPATH: /workspace/dagster_project
+    working_dir: /workspace
+    command: dagster dev -h 0.0.0.0 -p 3000 -f dagster_project/pipeline/definitions.py

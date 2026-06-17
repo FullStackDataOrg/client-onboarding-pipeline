@@ -1,0 +1,9 @@
+media_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Override with DUCKDB_PATH env var for local development:
+      #   export DUCKDB_PATH=./data/warehouse.duckdb
+      path: "{{ env_var('DUCKDB_PATH', '/workspace/data/warehouse.duckdb') }}"
+      threads: 4

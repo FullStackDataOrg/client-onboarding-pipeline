@@ -1,0 +1,3 @@
+{
+  "stack":["DBT", "DuckDB","Dagster","Docker Compose","Python"]
+}

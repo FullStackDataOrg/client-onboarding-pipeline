@@ -1,0 +1,57 @@
+flowchart LR
+    subgraph SRC["Source Systems"]
+        META_CSV(["meta_ads_raw.csv\n4,500 rows\n50 campaigns × 90 days"])
+        GOOGLE_CSV(["google_ads_raw.csv\n2,700 rows\n30 ad groups × 90 days"])
+        CUST_CSV(["customers_raw.csv\n5,000 rows\ndaily full snapshot"])
+    end
+
+    subgraph RAW["RAW — DuckDB Tables\nDagster Python assets · CREATE OR REPLACE"]
+        R1["raw.meta_ads_spend\ndate · campaign_id · impressions\nclicks · spend_cents · _loaded_at"]
+        R2["raw.google_ads_spend\nreport_date · ad_group_id · imps\nclks · cost_usd · _loaded_at"]
+        R3["raw.customers\ncustomer_id · email · plan_tier\nsignup_date · _loaded_at"]
+    end
+
+    subgraph BRONZE["BRONZE — dbt Views\nRename · Type cast · Always fresh · Zero storage"]
+        B1["br_meta__spend\nspend_date · spend_usd · platform='meta'"]
+        B2["br_google__spend\nschema drift resolved\nplatform='google'"]
+        B3["br_app__customers\n_loaded_at cast to TIMESTAMP"]
+    end
+
+    subgraph SILVER["SILVER — dbt Tables\nConform · Deduplicate"]
+        S1["stg_spend\n7,200 rows\nUNION ALL · single grain"]
+        S2["stg_customers\n5,000 rows\nincremental · unique_key"]
+    end
+
+    subgraph SNAP["SNAPSHOTS\nSCD Type 2"]
+        SN["snap_customers\ncheck_cols: plan_tier · email\ndbt_valid_from / dbt_valid_to"]
+    end
+
+    subgraph GOLD["GOLD — dbt Tables\nStar schema · BI-ready"]
+        G1["dim_campaign\n80 rows\nsurrogate key"]
+        G2["dim_date\n1,096 rows\n2024 – 2026"]
+        G3["fct_daily_spend\n7,200 rows\ncampaign × day grain"]
+        G4["agg_channel_performance\n180 rows\ndaily channel BI mart"]
+        SEED["channel_mapping seed\n2 rows\nplatform → channel label"]
+    end
+
+    META_CSV --> R1
+    GOOGLE_CSV --> R2
+    CUST_CSV --> R3
+
+    R1 --> B1
+    R2 --> B2
+    R3 --> B3
+    R3 -.->|dbt snapshot| SN
+
+    B1 --> S1
+    B2 --> S1
+    B3 --> S2
+
+    S1 --> G1
+    S1 --> G3
+    G1 --> G3
+    G2 --> G3
+    G3 --> G4
+    G1 --> G4
+    G2 --> G4
+    SEED --> G4
